@@ -38,60 +38,90 @@ class NPVModel(object):
 
         #Exit Assumptions
 
-
-
-    def proForma(self):
-        listOfLists = {}
+        self.listOfLists = {}
         for i in range(self.hpr + 2):
             if i == 0:
-                leveredCashFlow = -self.equityAmount
-                listOfLists[i] = 0
+                self.listOfLists[i] = 0
             else:
                 potGrossIncome = self.units * self.sfUnit * self.rent * 12 * ( (1+self.annualRentGrowth)**(i - 1) )
                 vacancyNumber = self.vac * potGrossIncome
                 effGrossIncome = potGrossIncome - vacancyNumber
                 if i == 1:
                     opexEffGross = effGrossIncome
-                opExNumber = (self.expratio * opexEffGross * (1 + self.expGrowthRate)**(i -1))
+                opExNumber = (self.expratio *
+                 opexEffGross * (1 + self.expGrowthRate)**(i -1))
                 noi = effGrossIncome - opExNumber 
                 debt_service = self.annualDebtSer
                 cfaf = noi - debt_service
 
                 dscr = noi/debt_service
                 cashOnCashRet = cfaf / self.equityAmount
-                listOfLists[i] = potGrossIncome, vacancyNumber, effGrossIncome, opExNumber, noi, debt_service, cfaf, dscr, cashOnCashRet
 
+                proFormalist = potGrossIncome, vacancyNumber, effGrossIncome, opExNumber, noi, debt_service, cfaf, dscr, cashOnCashRet
+                self.listOfLists[i] = proFormalist
+        
+        self.salePrice = self.listOfLists[self.hpr+1][4]/self.exitCapRate
+        self.salesExpense = self.salePrice * self.saleExpense
+        self.proceeds = self.salePrice - self.salesExpense
+        self.loanBalance = npf.fv(self.yearlyInRate/12, self.hpr*12, debt_service/12, -self.loanAmount)
+        self.netCashFlow = self.proceeds - self.loanBalance
+
+        self.leveredCashFlow = []
+        for i in range(self.hpr + 1):
+            value = self.listOfLists[i]
+            if isinstance(value, tuple) and i != self.hpr:
+                self.leveredCashFlow.append(value[6])
+            elif isinstance(value, tuple) and i == self.hpr:
+                self.leveredCashFlow.append(value[6] + self.netCashFlow)  # Access the 7th element
+            else:
+                self.leveredCashFlow.append(-self.equityAmount)
         
         
+        self.unleveredCashFlow = []
+        for i in range(self.hpr + 1):
+            value = self.listOfLists[i]
+            if isinstance(value, tuple) and i != self.hpr:
+                self.unleveredCashFlow.append(value[4])
+            elif isinstance(value, tuple) and i == self.hpr:
+                self.unleveredCashFlow.append(value[4] + self.proceeds)  # Access the 7th element
+            else:
+                self.unleveredCashFlow.append(-self.total_costs)
         
-        salePrice = listOfLists[self.hpr+1][4]/self.exitCapRate
-        salesExpense = salePrice*self.saleExpense
-        proceeds = salePrice - salesExpense
-        loanBalance = npf.fv(self.yearlyInRate/12, self.hpr*12, debt_service/12, -self.loanAmount)
-        netCashFlow = proceeds - loanBalance
+    def projectNPV(self):
+        ppv = npf.npv(self.reqUnlRet, self.unleveredCashFlow) + self.total_costs
+        return ppv
 
-                
-
-        return listOfLists, salePrice
-        """
-            
-            
-            
-
-            """
-            
-
-
-        
+    def projectNPV(self):
+        npv = npf.npv(self.reqUnlRet, self.unleveredCashFlow)
+        return npv
     
+    def projectUIRR(self):
+        u_irr = npf.irr(self.unleveredCashFlow)
+        return u_irr
+    
+    def projectLIRR(self):
+        l_irr = npf.irr(self.leveredCashFlow)
+        return l_irr
+
+    def equityMultiple(self):
+        negative = []
+        index = -1
+        leveredCF = self.leveredCashFlow #Prevent manipulating original list
+        for i in leveredCF:
+            index += 1
+            if i <= 0:
+                neg = float(leveredCF.pop(index))
+                negative.append(neg)
+        equityMult = (np.sum(leveredCF)) / np.sum(negative)
+        return -equityMult
 
 
 
 if __name__ == '__main__':
     
-    print(npf.pmt(.05/12, 25*12, -2400000) * 12)
-    print(-npf.fv(.05/12, 5*12, 168362/12, -2400000))
+    #print(npf.pmt(.05/12, 25*12, -2400000) * 12)
+    #print(-npf.fv(.05/12, 5*12, 168362/12, -2400000))
 
     model1 = NPVModel(12, 1000, 2.05, .03, .06, .3, .01, 2000000, 1200000, .85, .05, 25, 5, .75, .068, .03, .08)
-    print(model1.proForma())
-
+    print(model1.projectNPV())
+    print(model1.equityMultiple())
