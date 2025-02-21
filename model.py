@@ -114,6 +114,7 @@ class NPVModel(object):
                 negative.append(neg)
         equityMult = (np.sum(leveredCF)) / np.sum(negative)
         return -equityMult
+    
 
 
 
