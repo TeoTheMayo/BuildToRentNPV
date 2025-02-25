@@ -115,6 +115,42 @@ class NPVModel(object):
         equityMult = (np.sum(leveredCF)) / np.sum(negative)
         return -equityMult
     
+class SingleFamiliy(object):
+    def __int__(self, build_size, land_size, purchase_date, renovation_months, holding_period, months_to_market, estimated_sale_date, purchase_price, closing_costs, due_dilignece_costs, construction_budget, sale_price, broker_commision, other_closing_costs, proerty_tax, insurance_monthly, loan_to_value, mortgage_int_rate, mort_term, monthly_rental_rate, var_opex, prop_manegment_fee, days_vacant, capital_reserve, ann_income_growth_rate, ann_expense_growth_rate, occupancy_month):
+        self.build_size = build_size
+        self.land_size = land_size
+        self.purchase_date = purchase_date
+        self.renovation_months = renovation_months
+        self.holding_period = holding_period
+        self.months_to_market = months_to_market
+        self.investment_period = self.holding_period + self.renovation_months + self.months_to_market
+        self.estimated_sale_price = estimated_sale_date#COME BACK, needs to be max of monthly cash flow
+        self.purchase_price = purchase_price
+        self.closing_costs = closing_costs
+        self.due_diligence_costs  = due_dilignece_costs
+        self.construction_budget = construction_budget#REFERENCE to another assumption sheet: Construction Budget
+        self.sale_price = sale_price
+        self.broker_commision = broker_commision
+        self.other_closing_costs = other_closing_costs
+        self.property_tax = proerty_tax
+        self.insurance_monthly = insurance_monthly
+        self.loan_to_value = loan_to_value
+        self.loan_amount = self.purchase_price * self.loan_to_value
+        self.mort_int_rate = mortgage_int_rate
+        self.mort_term = mort_term
+        self.monthly_payment = -(npf.pmt(self.mort_int_rate/12, self.mort_term*12, self.loan_amount)) 
+        self.monthly_rental_rate = monthly_rental_rate
+        self.var_opex = var_opex
+        self.prop_management_fee = prop_manegment_fee
+        self.days_vacant = days_vacant
+        self.vacancy = self.days_vacant/365
+        self.capital_reserves = capital_reserve
+        self.ann_income_growth_rate = ann_income_growth_rate
+        self.ann_expense_growth_rate = ann_expense_growth_rate
+        self.occupancy_month = occupancy_month
+
+        
+
 
 
 
@@ -124,5 +160,8 @@ if __name__ == '__main__':
     #print(-npf.fv(.05/12, 5*12, 168362/12, -2400000))
 
     model1 = NPVModel(12, 1000, 2.05, .03, .06, .3, .01, 2000000, 1200000, .85, .05, 25, 5, .75, .068, .03, .08)
-    print(model1.projectNPV())
-    print(model1.equityMultiple())
+
+
+    print(-npf.pmt(.035/12, 30*12, 280000))
+    #print(model1.projectNPV())
+    #print(model1.equityMultiple())
