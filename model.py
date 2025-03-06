@@ -1,6 +1,6 @@
 import numpy as np
 import numpy_financial as npf
-
+from datetime import datetime
 
 class NPVModel(object):
     def __init__(self, units, sfUnit, rent, annualRentGrowth, vac, expRatio, expGrwothRate, acqPrice, renCosts, buildEff, yearlyIntRate, ammortization, hpr, ltc, exitCapRate, saleExpense, reqUnlRet):
@@ -149,7 +149,8 @@ class SingleFamiliy(object):
         self.ann_expense_growth_rate = ann_expense_growth_rate
         self.occupancy_month = occupancy_month
 
-        
+    def monthlyCashFlow(self):
+        return None
 
 
 
@@ -162,6 +163,37 @@ if __name__ == '__main__':
     model1 = NPVModel(12, 1000, 2.05, .03, .06, .3, .01, 2000000, 1200000, .85, .05, 25, 5, .75, .068, .03, .08)
 
 
-    print(-npf.pmt(.035/12, 30*12, 280000))
+    #print(-npf.pmt(.035/12, 30*12, 280000))
     #print(model1.projectNPV())
     #print(model1.equityMultiple())
+
+    def returnListOfMonths(investmentPeriod, PurchaseDate, ren_months, contsruction_budget):
+        #Incorporate ENDOFMONTH function
+        new_text = PurchaseDate.split("/")
+        year, month, day = int(new_text[-1]), int(new_text[0]), int(new_text[1])
+        date = datetime(year, month, day)
+        index = 0
+        new_period = investmentPeriod + 1
+        monthly_cash_flow_lib = []
+        while index < new_period:            
+            if index == 0:
+                index = 1
+                new_date = datetime(year, index, day)  
+            elif index == 12:
+                year += 1
+                index = 1
+                new_period -= 12
+                new_date = datetime(year, index, day)
+            else:
+                index += 1
+                new_date = datetime(year, index, day)
+            monthly_cash_flow_lib.append(new_date)
+
+        return monthly_cash_flow_lib
+        
+
+    x = returnListOfMonths(32, "1/1/2022", 4, 260000)
+    for i in x:
+        print(i.month)
+
+    
