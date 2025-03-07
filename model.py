@@ -1,6 +1,7 @@
 import numpy as np
 import numpy_financial as npf
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 class NPVModel(object):
     def __init__(self, units, sfUnit, rent, annualRentGrowth, vac, expRatio, expGrwothRate, acqPrice, renCosts, buildEff, yearlyIntRate, ammortization, hpr, ltc, exitCapRate, saleExpense, reqUnlRet):
@@ -167,33 +168,35 @@ if __name__ == '__main__':
     #print(model1.projectNPV())
     #print(model1.equityMultiple())
 
-    def returnListOfMonths(investmentPeriod, PurchaseDate, ren_months, contsruction_budget):
+    def returnListOfDates(investmentPeriod, PurchaseDate):
         #Incorporate ENDOFMONTH function
         new_text = PurchaseDate.split("/")
         year, month, day = int(new_text[-1]), int(new_text[0]), int(new_text[1])
-        date = datetime(year, month, day)
-        index = 0
         new_period = investmentPeriod + 1
         monthly_cash_flow_lib = []
-        while index < new_period:            
-            if index == 0:
-                index = 1
-                new_date = datetime(year, index, day)  
-            elif index == 12:
-                year += 1
-                index = 1
-                new_period -= 12
-                new_date = datetime(year, index, day)
-            else:
+        new_date = datetime(year, month, day)
+        index = 0
+        month_num = -1
+        month -= 1
+        while index < new_period:
+            if month == 12:
+                month = 1
                 index += 1
-                new_date = datetime(year, index, day)
-            monthly_cash_flow_lib.append(new_date)
-
+                year += 1
+                new_date = datetime(year, month, day) + relativedelta(day=31)
+            else:
+                month += 1
+                index += 1
+                new_date = datetime(year, month, day) + relativedelta(day=31)
+            monthly_cash_flow_lib.append([new_date, index])
+        
         return monthly_cash_flow_lib
+
+
         
 
-    x = returnListOfMonths(32, "1/1/2022", 4, 260000)
+    x = returnListOfDates(32, "1/1/2022")
     for i in x:
-        print(i.month)
+        print(i)
 
     
